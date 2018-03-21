@@ -16,6 +16,7 @@ _RT_USER = os.environ['RT_USER']
 _RT_PASS = os.environ['RT_PASS']
 _RT_QUEUE = os.environ['RT_QUEUE']
 _RT_REQUESTOR = os.environ['RT_REQUESTOR']
+_RT_CA_CERT = os.environ.get('RT_CA_CERT', True)
 
 _GITHUB_SECRET = os.environ['GH_SECRET'].encode()
 
@@ -35,7 +36,8 @@ class Tracker:
     def __init__(self):
         self.tracker = rt.Rt(
                 _RT_BASEURL, _RT_USER, _RT_PASS,
-                default_queue= _RT_QUEUE)
+                default_queue= _RT_QUEUE,
+                verify_cert=_RT_CA_CERT)
 
         if _DEBUG:
             print('Logging into RT.')
