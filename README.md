@@ -6,3 +6,7 @@ Uses the following:
 * AWS API Gateway
 * AWS DynamoDB (for issue # to ticket # mapping)
 * [python-rt](https://github.com/CZ-NIC/python-rt)
+
+NOTE: this assumes `create_ticket()` in [python-rt](https://github.com/wlyeow/python-rt) supports the `files` parameter for creating tickets with attachments.
+
+To generate `upload.zip`: run `make`.

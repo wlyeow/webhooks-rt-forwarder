@@ -141,7 +141,7 @@ def parseWebHookEventIssues(webhook):
     # new issue created
     if webhook.action == 'opened':
         subject = f'[{webhook.repository.name}] {webhook.issue.title}'
-        text = f'{webhook.sender.login} created issue #{webhook.issue.number} in GitHub repo {webhook.repository.full_name}. URL: {webhook.issue.html_url}'
+        text = f'{webhook.sender.login} created issue #{webhook.issue.number} in GitHub repo {webhook.repository.full_name}.\nURL: {webhook.issue.html_url}'
 
         tracker = Tracker()
 
@@ -151,25 +151,14 @@ def parseWebHookEventIssues(webhook):
         ticket_id = tracker.createTicket(
                 Requestor= _RT_REQUESTOR,
                 Subject= subject,
-                Text= text)
+                Text= text,
+                files= [(f'issue_{webhook.issue.id}_comment_0.md', io.StringIO(webhook.issue.body), 'text/plain; charset=UTF-8')])
 
         if ticket_id == -1:
             raise RuntimeError('Ticket creation failed.')
 
         if _DEBUG:
             print(f'Ticket id = {ticket_id}')
-            print('Adding message body as attachment.')
-        
-        ret = tracker.replyTicket(ticket_id, text='', files=[ \
-                (f'issue_{webhook.issue.id}_comment_0.md', \
-                 io.StringIO(webhook.issue.body), \
-                 'text/plain; charset=UTF-8')])
-
-        if ret == False:
-            raise RuntimeError('Cannot create attachment.')
-
-        if _DEBUG:
-            print('Done.')
             print(f'Storing ticket RT#{ticket_id} as {webhook.repository.full_name} / Issue id #{webhook.issue.id}.')
 
         storeTicketNumber(webhook.repository.full_name, webhook.issue.id, ticket_id)
@@ -198,7 +187,7 @@ def parseWebHookEventIssueComment(webhook):
         print(f'Retrieving Ticket number from {webhook.repository.full_name} / Issue id #{webhook.issue.id}.')
 
     ticket_id = getTicketNumber(webhook.repository.full_name, webhook.issue.id)   
-    text = f'{webhook.sender.login} updated issue #{webhook.issue.number} in GitHub repo {webhook.repository.full_name}. URL: {webhook.comment.html_url}'
+    text = f'{webhook.sender.login} updated issue #{webhook.issue.number} in GitHub repo {webhook.repository.full_name}.\nURL: {webhook.comment.html_url}'
 
     if _DEBUG:
         print(f'Updating ticket, comment id #{webhook.comment.id}.')
