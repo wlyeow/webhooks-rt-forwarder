@@ -81,23 +81,26 @@ def getEventDetails(event):
     _X_EVENT_TYPE = set(['issues', 'issue_comment'])
 
     if event['headers'][_X_EVENT] not in _X_EVENT_TYPE:
-        raise KeyError(f'GitHub event type "{event[_X_EVENT]}" is not valid.')
+        raise KeyError(f'GitHub event type "{event[_X_EVENT]}" is not valid')
 
     ( hash_algo, hash_value ) = event['headers'][_X_SIG].split('=', 1)
 
     if hash_algo not in hashlib.algorithms_guaranteed:
-        raise KeyError(f'Hash algorithm "{hash_algo}" is not available.')
+        raise KeyError(f'Hash algorithm "{hash_algo}" is not available')
 
     signature = hmac.new(_GITHUB_SECRET, event['body'].encode(), hash_algo)
 
     hexdigest = signature.hexdigest()
 
     if hexdigest != hash_value:
-        raise KeyError(f'Incorrect Hub Signature {hash_value} vs {hexdigest}')
+        raise KeyError(f'Incorrect GitHub Signature; given: {hash_value}; computed: {hexdigest}')
 
+    # return event_name, deserialized_json
+    # this won't work if the json keys are not allowed in namedtuple
     return (event['headers'][_X_EVENT], \
             json.loads(event['body'], \
-                object_hook=lambda d: namedtuple('WebHook', d.keys())(*d.values())))
+                object_hook=lambda d: namedtuple('WebHook', \
+                    [k+'_' for k in d.keys()]) (*d.values()) ))
 
 def respond(err):
     return {
@@ -136,41 +139,41 @@ def parseGitHubWebHookEvent(event):
 
 def parseWebHookEventIssues(webhook):
     if _DEBUG:
-        print(f'Issues Action: {webhook.action}')
+        print(f'Issues Action: {webhook.action_}')
 
     # new issue created
-    if webhook.action == 'opened':
-        subject = f'[{webhook.repository.name}] {webhook.issue.title}'
-        text = f'{webhook.sender.login} created issue #{webhook.issue.number} in GitHub repo {webhook.repository.full_name}.\nURL: {webhook.issue.html_url}'
+    if webhook.action_ == 'opened':
+        subject = f'[{webhook.repository_.name_}] {webhook.issue_.title_}'
+        text = f'{webhook.sender_.login_} created issue #{webhook.issue_.number_} in GitHub repo {webhook.repository_.full_name_}.\nURL: {webhook.issue_.html_url_}'
 
         tracker = Tracker()
 
         if _DEBUG:
-            print(f'Creating ticket for {webhook.repository.full_name} / Issue id #{webhook.issue.id}.')
+            print(f'Creating ticket for {webhook.repository_.full_name_} / Issue id #{webhook.issue_.id_}.')
 
         ticket_id = tracker.createTicket(
                 Requestor= _RT_REQUESTOR,
                 Subject= subject,
                 Text= text,
-                files= [(f'issue_{webhook.issue.id}_comment_0.md', io.StringIO(webhook.issue.body), 'text/plain; charset=UTF-8')])
+                files= [(f'issue_{webhook.issue_.id_}_comment_0.md', io.StringIO(webhook.issue_.body_), 'text/plain; charset=UTF-8')])
 
         if ticket_id == -1:
-            raise RuntimeError('Ticket creation failed.')
+            raise RuntimeError('Ticket creation failed')
 
         if _DEBUG:
             print(f'Ticket id = {ticket_id}')
-            print(f'Storing ticket RT#{ticket_id} as {webhook.repository.full_name} / Issue id #{webhook.issue.id}.')
+            print(f'Storing ticket RT#{ticket_id} as {webhook.repository_.full_name_} / Issue id #{webhook.issue_.id_}.')
 
-        storeTicketNumber(webhook.repository.full_name, webhook.issue.id, ticket_id)
+        storeTicketNumber(webhook.repository_.full_name_, webhook.issue_.id_, ticket_id)
         if _DEBUG:
             print('Done.')
         return
 
-    if webhook.action == 'closed':
+    if webhook.action_ == 'closed':
         if _DEBUG:
-            print(f'Retrieving Ticket number from {webhook.repository.full_name} / Issue id #{webhook.issue.id}.')
+            print(f'Retrieving Ticket number from {webhook.repository_.full_name_} / Issue id #{webhook.issue_.id_}.')
 
-        ticket_id = getTicketNumber(webhook.repository.full_name, webhook.issue.id)   
+        ticket_id = getTicketNumber(webhook.repository_.full_name_, webhook.issue_.id_)   
 
         if _DEBUG:
             print(f'Resolving Ticket {ticket_id}.')
@@ -180,25 +183,29 @@ def parseWebHookEventIssues(webhook):
             print('Done.')
         return
 
+    raise KeyError('Unimplemented issue action {webhook.action_}')
+
 def parseWebHookEventIssueComment(webhook):
-    # ignore action for now
-    if _DEBUG:
-        print(f'Issues Comments Action: {webhook.action}')
-        print(f'Retrieving Ticket number from {webhook.repository.full_name} / Issue id #{webhook.issue.id}.')
-
-    ticket_id = getTicketNumber(webhook.repository.full_name, webhook.issue.id)   
-    text = f'{webhook.sender.login} updated issue #{webhook.issue.number} in GitHub repo {webhook.repository.full_name}.\nURL: {webhook.comment.html_url}'
+    if webhook.action_ not in ['created', 'edited', 'deleted']:
+        raise KeyError('Unrecognised action {webhook.action_} in issue_comment')
 
     if _DEBUG:
-        print(f'Updating ticket, comment id #{webhook.comment.id}.')
+        print(f'Issues Comments Action: {webhook.action_}')
+        print(f'Retrieving Ticket number from {webhook.repository_.full_name_} / Issue id #{webhook.issue_.id_}.')
+
+    ticket_id = getTicketNumber(webhook.repository_.full_name_, webhook.issue_.id_)   
+    text = f'{webhook.sender_.login_} {webhook.action_} a comment in issue #{webhook.issue_.number_} in GitHub repo {webhook.repository_.full_name_}.\nURL: {webhook.comment_.html_url_}'
+
+    if _DEBUG:
+        print(f'Updating ticket, comment id #{webhook.comment_.id_}.')
 
     ret = Tracker().replyTicket(ticket_id, text= text, files=[ \
-            (f'issue_{webhook.issue.id}_comment_{webhook.comment.id}.md', \
-             io.StringIO(webhook.comment.body), \
+            (f'issue_{webhook.issue_.id_}_comment_{webhook.comment_.id_}.md', \
+             io.StringIO(webhook.comment_.body_), \
              'text/plain; charset=UTF-8')])
     
     if ret == False:
-        raise RuntimeError('Reply failed.')
+        raise RuntimeError('Reply failed')
 
     if _DEBUG:
         print('Done.')
