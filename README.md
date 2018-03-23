@@ -1,5 +1,7 @@
 # webhooks-rt-forwarder
-A python-3.6 simple forwarder for github issues to [Best Practical Request Tracker](https://bestpractical.com/request-tracker/) via webhooks.
+A simple python-3.6 GitHub issue forwarder to [Best Practical Request Tracker](https://bestpractical.com/request-tracker/) via webhooks.
+
+## Requirements
 
 Uses the following:
 * AWS Lambda
@@ -7,6 +9,19 @@ Uses the following:
 * AWS DynamoDB (for issue # to ticket # mapping)
 * [python-rt](https://github.com/CZ-NIC/python-rt)
 
-NOTE: this assumes `create_ticket()` in [python-rt](https://github.com/wlyeow/python-rt) supports the `files` parameter for creating tickets with attachments.
+NOTE: this assumes `create_ticket()` in python-rt supports the `files` parameter for creating tickets with attachments.
+
+## Lambda deployment
 
 To generate `upload.zip`: run `make`.
+
+## Environment variables
+| `RT_REST_BASEURL` | URL to RT REST endpoint                       |
+| `RT_USER`         | RT username                                   |
+| `RT_PASS`         | RT password                                   |
+| `RT_QUEUE`        | Queue for the ticket                          |
+| `RT_REQUESTOR`    | Requestor username or email                   |
+| `GH_SECRET`       | Webhook secret                                |
+| `DYN_TABLE`       | DynamoDB table name                           |
+| `RT_CA_CERT`      | _optional_ CA bundle for HTTPS                |
+| `DEBUG`           | _optional_ If present, produces lots of noise |
