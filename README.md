@@ -16,6 +16,8 @@ NOTE: this assumes `create_ticket()` in python-rt supports the `files` parameter
 To generate `upload.zip`: run `make`.
 
 ## Environment variables
+| Name              | Value                                         |
+|-------------------|-----------------------------------------------|
 | `RT_REST_BASEURL` | URL to RT REST endpoint                       |
 | `RT_USER`         | RT username                                   |
 | `RT_PASS`         | RT password                                   |
