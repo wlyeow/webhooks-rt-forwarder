@@ -1,5 +1,5 @@
 # webhooks-rt-forwarder
-A simple python-3.6 GitHub issue forwarder to [Best Practical Request Tracker](https://bestpractical.com/request-tracker/) via webhooks.
+A simple python-3 GitHub issue forwarder to [Best Practical Request Tracker](https://bestpractical.com/request-tracker/) via webhooks.
 
 ## Requirements
 

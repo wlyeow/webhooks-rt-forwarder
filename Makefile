@@ -1,4 +1,4 @@
-SITE=$(shell python -c 'from distutils.sysconfig import get_python_lib; print(get_python_lib())')
+SITE=$(shell python3 -c 'from distutils.sysconfig import get_python_lib; print(get_python_lib())')
 CWD=$(shell pwd)
 CERT_BUNDLE=certs/
 
