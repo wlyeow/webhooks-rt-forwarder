@@ -1,6 +1,2 @@
-pip*
-easy_install.py
 *.pyc
-setuptools*
 *__pycache__*
-pkg_resources*

@@ -1,0 +1,11 @@
+certifi/*
+certifi-*.dist-info/*
+chardet/*
+chardet-*.dist-info/*
+idna/*
+idna-*.dist-info/*
+requests/
+requests-*.dist-info/*
+six-*.dist-info/*
+urllib3/*
+urllib3-*.dist-info/*
